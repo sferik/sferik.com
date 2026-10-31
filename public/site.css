@@ -650,6 +650,47 @@ main[aria-busy] > .lpr {
   --g3: color-mix(in oklab, var(--ok) 75%, var(--paper));
   --g4: var(--ok);
 }
+/* On Halloween, and from the winter solstice through New Year's Day,
+   GitHub's own holiday colors (from Primer's contribution tokens) for days
+   with contributions, in light and dark. Amber phosphor stays amber. */
+:root:not([data-theme="phosphor"]) .cal[data-holiday="halloween"] {
+  --g1: #f0db3d;
+  --g2: #ffd642;
+  --g3: #f68c41;
+  --g4: #1f2328;
+}
+:root:not([data-theme="phosphor"]) .cal[data-holiday="winter"] {
+  --g1: #b6e3ff;
+  --g2: #54aeff;
+  --g3: #0969da;
+  --g4: #0a3069;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) .cal[data-holiday="halloween"] {
+    --g1: #fac68f;
+    --g2: #c46212;
+    --g3: #984b10;
+    --g4: #e3d04f;
+  }
+  :root:not([data-theme]) .cal[data-holiday="winter"] {
+    --g1: #0c2d6b;
+    --g2: #1158c7;
+    --g3: #58a6ff;
+    --g4: #cae8ff;
+  }
+}
+:root[data-theme="dark"] .cal[data-holiday="halloween"] {
+  --g1: #fac68f;
+  --g2: #c46212;
+  --g3: #984b10;
+  --g4: #e3d04f;
+}
+:root[data-theme="dark"] .cal[data-holiday="winter"] {
+  --g1: #0c2d6b;
+  --g2: #1158c7;
+  --g3: #58a6ff;
+  --g4: #cae8ff;
+}
 .graph .c0 {
   color: var(--g0);
 }

@@ -164,8 +164,10 @@ test.describe("themes", () => {
   test("graph shades the prompt's green in each mode, amber phosphor included", async ({ page }) => {
     const shade = (page: Page, level: number) =>
       page.evaluate((l) => getComputedStyle(document.querySelector(`[data-graph] .c${l}`) || document.body).color, level);
+    await page.clock.setFixedTime(new Date("2026-10-30T23:59:59Z")); // not a holiday
     await page.emulateMedia({ colorScheme: "light" });
     await page.goto("/");
+    await expect(page.locator("[data-graph] .cal")).not.toHaveAttribute("data-holiday");
     await expect(page.locator("[data-graph] .c4").first()).toBeAttached();
     expect(await shade(page, 4)).toBe("rgb(42, 122, 46)"); // --ok, #2a7a2e
     expect(await shade(page, 2)).toMatch(/^oklab\(/); // half of it, mixed into the paper
@@ -173,6 +175,53 @@ test.describe("themes", () => {
     expect(await shade(page, 4)).toBe("rgb(124, 196, 127)"); // #7cc47f
     await page.evaluate(() => (document.documentElement.dataset.theme = "phosphor"));
     expect(await shade(page, 4)).toBe("rgb(255, 176, 0)"); // #ffb000
+  });
+
+  test("graph wears GitHub's Halloween colors on October 31st in UTC, but not in phosphor", async ({ page }) => {
+    const shade = (page: Page, level: number) =>
+      page.evaluate((l) => getComputedStyle(document.querySelector(`[data-graph] .c${l}`) || document.body).color, level);
+    await page.clock.setFixedTime(new Date("2026-10-31T00:00:00Z"));
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("/");
+    await expect(page.locator("[data-graph] .cal")).toHaveAttribute("data-holiday", "halloween");
+    expect(await shade(page, 3)).toBe("rgb(246, 140, 65)"); // #f68c41
+    expect(await shade(page, 4)).toBe("rgb(31, 35, 40)"); // #1f2328
+    expect(await shade(page, 0)).toMatch(/^oklab\(/); // days without contributions stay gray
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect(await shade(page, 4)).toBe("rgb(227, 208, 79)"); // #e3d04f
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.evaluate(() => (document.documentElement.dataset.theme = "dark"));
+    expect(await shade(page, 4)).toBe("rgb(227, 208, 79)");
+    await page.evaluate(() => (document.documentElement.dataset.theme = "phosphor"));
+    expect(await shade(page, 4)).toBe("rgb(255, 176, 0)"); // #ffb000
+  });
+
+  test("graph wears GitHub's winter colors from December 21st through New Year's Day, in UTC", async ({ page }) => {
+    const on = async (iso: string) => {
+      await page.clock.setFixedTime(new Date(iso));
+      await page.goto("/");
+      await expect(page.locator("[data-graph] .cal")).toBeAttached();
+      return page.locator("[data-graph] .cal").getAttribute("data-holiday");
+    };
+    expect(await on("2026-12-20T23:59:59Z")).toBeNull();
+    expect(await on("2026-12-21T00:00:00Z")).toBe("winter");
+    expect(await on("2026-12-31T12:00:00Z")).toBe("winter");
+    expect(await on("2027-01-01T23:59:59Z")).toBe("winter");
+    expect(await on("2027-01-02T00:00:00Z")).toBeNull();
+  });
+
+  test("graph's winter colors in light and dark", async ({ page }) => {
+    const shade = (page: Page, level: number) =>
+      page.evaluate((l) => getComputedStyle(document.querySelector(`[data-graph] .c${l}`) || document.body).color, level);
+    await page.clock.setFixedTime(new Date("2026-12-21T23:59:59Z"));
+    await page.emulateMedia({ colorScheme: "light" });
+    await page.goto("/");
+    await expect(page.locator("[data-graph] .cal")).toHaveAttribute("data-holiday", "winter");
+    expect(await shade(page, 4)).toBe("rgb(10, 48, 105)"); // #0a3069
+    await page.emulateMedia({ colorScheme: "dark" });
+    expect(await shade(page, 4)).toBe("rgb(202, 232, 255)"); // #cae8ff
+    await page.evaluate(() => (document.documentElement.dataset.theme = "dark"));
+    expect(await shade(page, 1)).toBe("rgb(12, 45, 107)"); // #0c2d6b
   });
 
   test("ignores a theme saved by an older version of the site", async ({ page }) => {

@@ -171,6 +171,10 @@ const GLYPHS = ["■", "■", "■", "■", "■"];
 // "October 7th": the endings of English ordinals, by plural category.
 const ordinal = new Intl.PluralRules("en-US", { type: "ordinal" });
 const TH: Record<string, string> = { one: "st", two: "nd", few: "rd", other: "th" };
+// Like GitHub's, the graph dresses up for Halloween, and for winter from the
+// solstice through New Year's Day, going by the date in UTC. The stylesheet
+// has the colors.
+const holidayOn = (md: string) => (md === "10-31" ? "halloween" : md >= "12-21" || md === "01-01" ? "winter" : null);
 function graph(days: Day[]) {
   const first = new Date(days[0].date + "T00:00:00");
   const cells: (Day | null)[] = [...Array<null>(first.getDay()).fill(null), ...days];
@@ -188,7 +192,8 @@ function graph(days: Day[]) {
   // A label needs three weeks to itself, before the next label or the end of
   // the graph, or it overlaps the next one or overflows on a narrow screen.
   const months = labels.filter((l, i) => (labels[i + 1]?.w ?? weeks) - l.w >= 3);
-  const grid = el("div", { class: "cal", "aria-hidden": "true" });
+  const holiday = holidayOn(new Date().toISOString().slice(5, 10));
+  const grid = el("div", { class: "cal", "aria-hidden": "true", "data-holiday": holiday });
   grid.style.setProperty("--weeks", String(weeks));
   const place = (node: HTMLElement, row: number, col: number) => {
     node.style.gridRow = String(row);
